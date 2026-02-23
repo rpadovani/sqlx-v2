@@ -1,0 +1,26 @@
+# Benchmark results
+*.txt
+*.out
+*.prof
+
+# Test artifacts
+*.test
+*.db
+*.bak
+
+# IDEs
+.vscode/
+.idea/
+
+# Documentation artifacts
+*.html
+
+# Shadow clone
+.shadow_sqlx
+shadow_sqlx/
+
+# Fuzz corpus & cache
+**/testdata/fuzz/
+
+# Compat testing
+tmp/
