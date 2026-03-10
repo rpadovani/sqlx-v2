@@ -30,6 +30,7 @@ jobs:
       - name: Go Test Coverage
         uses: vladopajic/go-test-coverage@v2
         with:
+          profile: coverage.out
           config: .test-coverage.yml
           git-token: ${{ secrets.GITHUB_TOKEN }}
           git-branch: badge # Or wherever you want to store badges

@@ -51,6 +51,3 @@ linters:
     - gocritic # some complex if-else blocks are structurally clearer than switch
     - errname # legacy exported err constants exist without Err prefix
     - godox # TODOs and FIXMEs are active issues that shouldn't break CI
-formatters:
-  disable:
-    - gci # import ordering isn't rigidly enforced project-wide
