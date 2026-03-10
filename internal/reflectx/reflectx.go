@@ -16,6 +16,7 @@ package reflectx
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 	"strings"
 	"sync"
@@ -137,7 +138,9 @@ func (m *Mapper) TraversalsByName(t reflect.Type, names []string) [][]int {
 	traversals := make([][]int, len(names))
 	for i, name := range names {
 		if fi, ok := tm.Names[name]; ok {
-			traversals[i] = fi.Index
+			traverse := make([]int, len(fi.Index))
+			copy(traverse, fi.Index)
+			traversals[i] = traverse
 		}
 	}
 	return traversals
@@ -146,7 +149,9 @@ func (m *Mapper) TraversalsByName(t reflect.Type, names []string) [][]int {
 // FieldMap returns the mapper's mapping of field names to FieldInfos.
 func (m *Mapper) FieldMap(t reflect.Type) map[string]*FieldInfo {
 	tm := m.TypeMap(t)
-	return tm.Names
+	mCopy := make(map[string]*FieldInfo, len(tm.Names))
+	maps.Copy(mCopy, tm.Names)
+	return mCopy
 }
 
 // TypeMap returns a StructMap for the given reflect.Type, creating it if necessary.

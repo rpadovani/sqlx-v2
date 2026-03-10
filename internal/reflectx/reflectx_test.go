@@ -478,3 +478,52 @@ func TestFieldByIndexesReadOnly(t *testing.T) {
 		t.Errorf("expected 'hello', got '%s'", res.String())
 	}
 }
+
+func TestMapper_TraversalsByName_CachePoisoning(t *testing.T) {
+	type VictimStruct struct {
+		ID   int    `db:"id"`
+		Name string `db:"name"`
+	}
+
+	m := NewMapperFunc("db", strings.ToLower)
+	
+	// Query 1 gets traversals
+	traversals1 := m.TraversalsByName(reflect.TypeFor[VictimStruct](), []string{"name"})
+	if traversals1[0][0] != 1 {
+		t.Fatalf("expected initial 'name' index to be 1, got %d", traversals1[0][0])
+	}
+
+	// Malicious actor modifies the returned traversal
+	traversals1[0][0] = 99
+
+	// Query 2 gets traversals, expecting the original uncorrupted value
+	traversals2 := m.TraversalsByName(reflect.TypeFor[VictimStruct](), []string{"name"})
+	if traversals2[0][0] == 99 {
+		t.Fatalf("CACHE POISONED! TraversalsByName returned a mutated slice. Expected 1, got 99")
+	}
+}
+
+func TestMapper_FieldMap_CachePoisoning(t *testing.T) {
+	type VictimStruct struct {
+		ID   int    `db:"id"`
+		Name string `db:"name"`
+	}
+
+	m := NewMapperFunc("db", strings.ToLower)
+	
+	// Query 1 gets the FieldMap
+	fieldMap1 := m.FieldMap(reflect.TypeFor[VictimStruct]())
+	if _, ok := fieldMap1["name"]; !ok {
+		t.Fatalf("expected 'name' in field map")
+	}
+
+	// Malicious actor modifies the returned map
+	delete(fieldMap1, "name")
+
+	// Query 2 gets the FieldMap
+	fieldMap2 := m.FieldMap(reflect.TypeFor[VictimStruct]())
+	if _, ok := fieldMap2["name"]; !ok {
+		t.Fatalf("CACHE POISONED! FieldMap returned a mutated map where 'name' was deleted")
+	}
+}
+

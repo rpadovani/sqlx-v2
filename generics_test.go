@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	sqlx "github.com/rpadovani/sqlx-v2"
+	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/rpadovani/sqlx-v2/internal/mockdb"
 )
 
@@ -305,3 +306,48 @@ func TestGetTx_NoRows(t *testing.T) {
 		t.Fatalf("expected sql.ErrNoRows, got %v", err)
 	}
 }
+
+// =============================================================================
+// Vulnerability Tests
+// =============================================================================
+
+type AliasTrap struct {
+	ID   int     `db:"id"`
+	Name *string `db:"name"`
+}
+
+func TestSelectIter_SyncPool_PointerAlias(t *testing.T) {
+	rawDB, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = rawDB.Close() }()
+
+	_, err = rawDB.Exec(`CREATE TABLE alias_trap (id INTEGER, name TEXT);
+		INSERT INTO alias_trap (id, name) VALUES (1, 'Alice'), (2, 'Bob'), (3, 'Charlie');`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db := sqlx.NewDb(rawDB, "sqlite3")
+	ctx := context.Background()
+
+	var names []*string
+	for row, err := range sqlx.SelectIter[AliasTrap](ctx, db, "SELECT id, name FROM alias_trap ORDER BY id") {
+		if err != nil {
+			t.Fatal(err)
+		}
+		names = append(names, row.Name)
+	}
+
+	if len(names) != 3 {
+		t.Fatalf("expected 3 names, got %d", len(names))
+	}
+
+	// If pointer aliasing bug exists, all pointers will point to the last row's value ("Charlie")
+	if *names[0] != "Alice" || *names[1] != "Bob" || *names[2] != "Charlie" {
+		t.Errorf("pointer aliasing detected: expected [Alice, Bob, Charlie], got [%s, %s, %s]",
+			*names[0], *names[1], *names[2])
+	}
+}
+
