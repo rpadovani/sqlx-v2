@@ -41,7 +41,8 @@ jobs:
       - name: Benchmark Head
         run: |
           cd head
-          go test -bench=. -benchmem -count=5 ./... > ../head_bench.txt
+          # Run benchmarks and output to file
+          go test -bench=. -benchmem -count=5 -p 1 ./... > ../head_bench.txt
 
       - name: Compare Benchmarks
         id: compare
