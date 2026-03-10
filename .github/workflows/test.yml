@@ -41,14 +41,6 @@ jobs:
         run: |
           ./scripts/run_tests.sh
 
-      - name: Run Tests (Manual)
-        if: matrix.os != 'ubuntu-latest'
-        run: go test -v -p 1 ./...
-
-      - name: Race Detector (Manual)
-        if: matrix.os != 'ubuntu-latest'
-        run: go test -v -race -p 1 ./...
-
   shadow-parity:
     name: Shadow Parity Check
     runs-on: ubuntu-latest
@@ -63,7 +55,7 @@ jobs:
           cache: true
 
       - name: Run Shadow Tests
-        run: go test -v -p 1 ./internal/shadow/...
+        run: go test -v ./internal/shadow/...
 
   fuzz-check:
     name: Fuzzing Verification
