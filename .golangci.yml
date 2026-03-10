@@ -16,6 +16,13 @@ linters:
     - testpackage
     - tparallel
     - wsl
+    - wsl_v5
+    - noctx
+    - unqueryvet
+    - embeddedstructfieldcheck
+    - funcorder
+    - noinlineerr
+    - prealloc
     - nlreturn
     - mnd
     - ireturn
@@ -34,7 +41,6 @@ linters:
     - godot # we don't strictly enforce periods in comments
     - dupl # tests have duplicated boilerplate
     - usetesting # context.Background() in tests is fine
-    - stylecheck # NewDb vs NewDB breaks v1 compatibility
     - gosec # we don't need crypto/rand everywhere
     - inamedparam # Scan(any) is standard in some interface defs
     - musttag # sqlx allows fields without db tags
