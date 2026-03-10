@@ -1,0 +1,51 @@
+version: 2
+
+run:
+  timeout: 5m
+
+linters:
+  enable-all: true
+  disable:
+    # Disable linters that are controversial or too noisy for this specific project
+    - depguard
+    - forbidigo
+    - wrapcheck
+    - lll # We allow some long lines for readability in complex pointer logic
+    - varnamelen # short names are idiomatic in go loops
+    - cyclop # gocyclo is already there
+    - exhaustruct # we often use partial initialization
+    - paralleltest # not all tests need to be parallel
+    - testpackage # we use both inner and outer tests
+    - tparallel # related to paralleltest
+    - wsl # too opinionated about whitespace
+    - nlreturn # too opinionated about newlines
+    - gomnd # we use magic numbers for pointer alignment/offsets
+    - ireturn # we sometimes return interfaces for compatibility
+    - nonamedreturns # we use named returns for documentation
+    - tagalign # too noisy
+    - tagliatelle # we use standard naming
+    - exhaustive # sometimes too much
+    - exhaustivestruct # deprecated
+
+linters-settings:
+  govet:
+    enable-all: true
+  revive:
+    rules:
+      - name: exported
+      - name: package-comments
+      - name: var-naming
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+  maintidx:
+    under: 20
+  gocyclo:
+    min-complexity: 15
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0

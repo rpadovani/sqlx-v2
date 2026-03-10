@@ -1,0 +1,20 @@
+# Go Test Coverage configuration
+
+# Threshold for total coverage
+threshold:
+  total: 80
+
+# Maximum allowed coverage reduction
+reduction:
+  total: 0
+
+# Specify packages for detailed reporting
+# engine and reflectx are the most critical
+report:
+  # Enable reporting for these packages
+  include:
+    - github.com/rpadovani/sqlx-v2/engine.go
+    - github.com/rpadovani/sqlx-v2/internal/reflectx/...
+
+# Fail if coverage decreases
+fail-on-negative-delta: true
