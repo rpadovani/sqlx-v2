@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	v1sqlx "github.com/jmoiron/sqlx"
+
 	sqlx "github.com/rpadovani/sqlx-v2"
 	_ "github.com/rpadovani/sqlx-v2/internal/mockdb"
 )
@@ -619,6 +620,7 @@ func BenchmarkV1_Get_Small(b *testing.B) {
 		}
 	}
 }
+
 func BenchmarkV2_Get_Small(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -637,6 +639,7 @@ func BenchmarkV2_Get_Small(b *testing.B) {
 		}
 	}
 }
+
 func BenchmarkV2G_Get_Small(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -673,6 +676,7 @@ func BenchmarkV1_Get_Medium(b *testing.B) {
 		}
 	}
 }
+
 func BenchmarkV2_Get_Medium(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -691,6 +695,7 @@ func BenchmarkV2_Get_Medium(b *testing.B) {
 		}
 	}
 }
+
 func BenchmarkV2G_Get_Medium(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -727,6 +732,7 @@ func BenchmarkV1_Get_Large(b *testing.B) {
 		}
 	}
 }
+
 func BenchmarkV2_Get_Large(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -745,6 +751,7 @@ func BenchmarkV2_Get_Large(b *testing.B) {
 		}
 	}
 }
+
 func BenchmarkV2G_Get_Large(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -780,13 +787,14 @@ func BenchmarkV1_StructScan_Small_1(b *testing.B) {
 			var result SmallStruct
 			err := rows.StructScan(&result)
 			GlobalResult = result
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_StructScan_Small_1(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -804,9 +812,9 @@ func BenchmarkV2_StructScan_Small_1(b *testing.B) {
 			var result SmallStruct
 			err := rows.StructScan(&result)
 			GlobalResult = result
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
@@ -834,6 +842,7 @@ func BenchmarkV1_MapScan_Small_1(b *testing.B) {
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_MapScan_Small_1(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -872,13 +881,14 @@ func BenchmarkV1_SliceScan_Small_1(b *testing.B) {
 		for rows.Next() {
 			res, err := rows.SliceScan()
 			GlobalResult = res
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_SliceScan_Small_1(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -894,9 +904,9 @@ func BenchmarkV2_SliceScan_Small_1(b *testing.B) {
 		for rows.Next() {
 			res, err := rows.SliceScan()
 			GlobalResult = res
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
@@ -919,13 +929,14 @@ func BenchmarkV1_StructScan_Medium_1(b *testing.B) {
 			var result MediumStruct
 			err := rows.StructScan(&result)
 			GlobalResult = result
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_StructScan_Medium_1(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -943,9 +954,9 @@ func BenchmarkV2_StructScan_Medium_1(b *testing.B) {
 			var result MediumStruct
 			err := rows.StructScan(&result)
 			GlobalResult = result
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
@@ -973,6 +984,7 @@ func BenchmarkV1_MapScan_Medium_1(b *testing.B) {
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_MapScan_Medium_1(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1011,13 +1023,14 @@ func BenchmarkV1_SliceScan_Medium_1(b *testing.B) {
 		for rows.Next() {
 			res, err := rows.SliceScan()
 			GlobalResult = res
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_SliceScan_Medium_1(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1033,9 +1046,9 @@ func BenchmarkV2_SliceScan_Medium_1(b *testing.B) {
 		for rows.Next() {
 			res, err := rows.SliceScan()
 			GlobalResult = res
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
@@ -1058,13 +1071,14 @@ func BenchmarkV1_StructScan_Large_1(b *testing.B) {
 			var result LargeStruct
 			err := rows.StructScan(&result)
 			GlobalResult = result
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_StructScan_Large_1(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1082,9 +1096,9 @@ func BenchmarkV2_StructScan_Large_1(b *testing.B) {
 			var result LargeStruct
 			err := rows.StructScan(&result)
 			GlobalResult = result
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
@@ -1112,6 +1126,7 @@ func BenchmarkV1_MapScan_Large_1(b *testing.B) {
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_MapScan_Large_1(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1150,13 +1165,14 @@ func BenchmarkV1_SliceScan_Large_1(b *testing.B) {
 		for rows.Next() {
 			res, err := rows.SliceScan()
 			GlobalResult = res
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_SliceScan_Large_1(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1172,9 +1188,9 @@ func BenchmarkV2_SliceScan_Large_1(b *testing.B) {
 		for rows.Next() {
 			res, err := rows.SliceScan()
 			GlobalResult = res
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
@@ -1197,13 +1213,14 @@ func BenchmarkV1_StructScan_Small_1000(b *testing.B) {
 			var result SmallStruct
 			err := rows.StructScan(&result)
 			GlobalResult = result
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_StructScan_Small_1000(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1221,9 +1238,9 @@ func BenchmarkV2_StructScan_Small_1000(b *testing.B) {
 			var result SmallStruct
 			err := rows.StructScan(&result)
 			GlobalResult = result
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
@@ -1251,6 +1268,7 @@ func BenchmarkV1_MapScan_Small_1000(b *testing.B) {
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_MapScan_Small_1000(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1289,13 +1307,14 @@ func BenchmarkV1_SliceScan_Small_1000(b *testing.B) {
 		for rows.Next() {
 			res, err := rows.SliceScan()
 			GlobalResult = res
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_SliceScan_Small_1000(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1311,9 +1330,9 @@ func BenchmarkV2_SliceScan_Small_1000(b *testing.B) {
 		for rows.Next() {
 			res, err := rows.SliceScan()
 			GlobalResult = res
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
@@ -1336,13 +1355,14 @@ func BenchmarkV1_StructScan_Medium_1000(b *testing.B) {
 			var result MediumStruct
 			err := rows.StructScan(&result)
 			GlobalResult = result
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_StructScan_Medium_1000(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1360,9 +1380,9 @@ func BenchmarkV2_StructScan_Medium_1000(b *testing.B) {
 			var result MediumStruct
 			err := rows.StructScan(&result)
 			GlobalResult = result
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
@@ -1390,6 +1410,7 @@ func BenchmarkV1_MapScan_Medium_1000(b *testing.B) {
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_MapScan_Medium_1000(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1428,13 +1449,14 @@ func BenchmarkV1_SliceScan_Medium_1000(b *testing.B) {
 		for rows.Next() {
 			res, err := rows.SliceScan()
 			GlobalResult = res
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_SliceScan_Medium_1000(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1450,9 +1472,9 @@ func BenchmarkV2_SliceScan_Medium_1000(b *testing.B) {
 		for rows.Next() {
 			res, err := rows.SliceScan()
 			GlobalResult = res
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
@@ -1475,13 +1497,14 @@ func BenchmarkV1_StructScan_Large_1000(b *testing.B) {
 			var result LargeStruct
 			err := rows.StructScan(&result)
 			GlobalResult = result
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_StructScan_Large_1000(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1499,9 +1522,9 @@ func BenchmarkV2_StructScan_Large_1000(b *testing.B) {
 			var result LargeStruct
 			err := rows.StructScan(&result)
 			GlobalResult = result
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
@@ -1529,6 +1552,7 @@ func BenchmarkV1_MapScan_Large_1000(b *testing.B) {
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_MapScan_Large_1000(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1567,13 +1591,14 @@ func BenchmarkV1_SliceScan_Large_1000(b *testing.B) {
 		for rows.Next() {
 			res, err := rows.SliceScan()
 			GlobalResult = res
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
 }
+
 func BenchmarkV2_SliceScan_Large_1000(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1589,9 +1614,9 @@ func BenchmarkV2_SliceScan_Large_1000(b *testing.B) {
 		for rows.Next() {
 			res, err := rows.SliceScan()
 			GlobalResult = res
-		if err != nil {
-			b.Fatalf("benchmark failed: %v", err)
-		}
+			if err != nil {
+				b.Fatalf("benchmark failed: %v", err)
+			}
 		}
 		_ = rows.Close()
 	}
@@ -1610,6 +1635,7 @@ func BenchmarkV1_Exec(b *testing.B) {
 		GlobalError = err
 	}
 }
+
 func BenchmarkV2_Exec(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1635,6 +1661,7 @@ func BenchmarkV1_MustExec(b *testing.B) {
 		db.MustExec("INSERT INTO foo VALUES (1)")
 	}
 }
+
 func BenchmarkV2_MustExec(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1660,6 +1687,7 @@ func BenchmarkV1_NamedExec(b *testing.B) {
 		GlobalError = err
 	}
 }
+
 func BenchmarkV2_NamedExec(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1703,6 +1731,7 @@ func BenchmarkV1_Prepare(b *testing.B) {
 		GlobalError = err
 	}
 }
+
 func BenchmarkV2_Prepare(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1736,6 +1765,7 @@ func BenchmarkV1_PrepareNamed(b *testing.B) {
 		GlobalError = err
 	}
 }
+
 func BenchmarkV2_PrepareNamed(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1769,6 +1799,7 @@ func BenchmarkV1_Preparex(b *testing.B) {
 		GlobalError = err
 	}
 }
+
 func BenchmarkV2_Preparex(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1802,6 +1833,7 @@ func BenchmarkV1_Get_Small_Cold(b *testing.B) {
 		}
 	}
 }
+
 func BenchmarkV2_Get_Small_Cold(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()
@@ -1818,6 +1850,7 @@ func BenchmarkV2_Get_Small_Cold(b *testing.B) {
 		}
 	}
 }
+
 func BenchmarkV2G_Get_Small_Cold(b *testing.B) {
 	db := getDB_V2(b)
 	defer func() { _ = db.Close() }()

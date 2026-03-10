@@ -23,9 +23,10 @@ import (
 	"github.com/leanovate/gopter"
 	"github.com/leanovate/gopter/gen"
 	"github.com/leanovate/gopter/prop"
+	_ "modernc.org/sqlite"
+
 	sqlx "github.com/rpadovani/sqlx-v2"
 	"github.com/rpadovani/sqlx-v2/internal/testutil"
-	_ "modernc.org/sqlite"
 )
 
 // PBTStruct represents a generated database row containing various supported scalar types.

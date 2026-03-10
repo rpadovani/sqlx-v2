@@ -321,7 +321,6 @@ func getScan(rows *sql.Rows, dest any, isUnsafe, strictTagParsing bool, mapper *
 		found = true
 		return ErrStopIter
 	})
-
 	if err != nil {
 		return err
 	}

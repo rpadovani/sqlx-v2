@@ -68,9 +68,9 @@ type FieldInfo struct {
 
 // Step represents a single level of dereferencing or offset in a struct traversal.
 type Step struct {
-	Offset   uintptr
-	Type     reflect.Type   // If not nil, this step is a pointer that might need allocation of this Type
-	PtrType  reflect.Type   // Cache of reflect.PointerTo(Type) for zero-allocation write barrier Set
+	Offset  uintptr
+	Type    reflect.Type // If not nil, this step is a pointer that might need allocation of this Type
+	PtrType reflect.Type // Cache of reflect.PointerTo(Type) for zero-allocation write barrier Set
 }
 
 // StructMap represents a mapped struct, with fields flattened

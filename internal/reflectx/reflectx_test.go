@@ -438,7 +438,6 @@ func TestMapper_TraversalsByNameFunc(t *testing.T) {
 		}
 		return nil
 	})
-
 	if err != nil {
 		t.Fatal(err)
 	}

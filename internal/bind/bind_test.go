@@ -72,7 +72,6 @@ func BenchmarkBindSpeed(b *testing.B) {
 				b.Error("unknown driver")
 			}
 		}
-
 	})
 
 	b.Run("new", func(b *testing.B) {
@@ -88,9 +87,9 @@ func BenchmarkBindSpeed(b *testing.B) {
 				b.Error("unknown driver")
 			}
 		}
-
 	})
 }
+
 func TestCompileQuery(t *testing.T) {
 	table := []struct {
 		Q, R, D, T, N string
@@ -208,7 +207,7 @@ func (t Test) Errorf(err error, format string, args ...any) {
 
 func TestEscapedColons(t *testing.T) {
 	t.Skip("not sure it is possible to support this in general case without an SQL parser")
-	var qs = `SELECT * FROM testtable WHERE timeposted BETWEEN (now() AT TIME ZONE 'utc') AND
+	qs := `SELECT * FROM testtable WHERE timeposted BETWEEN (now() AT TIME ZONE 'utc') AND
 	(now() AT TIME ZONE 'utc') - interval '01:30:00') AND name = '\'this is a test\'' and id = :id`
 	_, _, err := compileNamedQuery([]byte(qs), DOLLAR)
 	if err != nil {
