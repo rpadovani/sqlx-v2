@@ -18,3 +18,7 @@ report:
 
 # Fail if coverage decreases
 fail-on-negative-delta: true
+
+# These are for the badge/chart generation if supported by the action
+chart: true
+help: true

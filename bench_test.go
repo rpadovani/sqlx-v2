@@ -1747,7 +1747,7 @@ func BenchmarkV2_PrepareNamed(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		stmt, err := db.PrepareNamed("INSERT INTO foo VALUES (:id)")
 		if stmt != nil {
-			stmt.Close()
+			_ = stmt.Close()
 		}
 		GlobalError = err
 	}
@@ -1764,7 +1764,7 @@ func BenchmarkV1_Preparex(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		stmt, err := db.Preparex("INSERT INTO foo VALUES (1)")
 		if stmt != nil {
-			stmt.Close()
+			_ = stmt.Close()
 		}
 		GlobalError = err
 	}
@@ -1780,7 +1780,7 @@ func BenchmarkV2_Preparex(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		stmt, err := db.Preparex("INSERT INTO foo VALUES (1)")
 		if stmt != nil {
-			stmt.Close()
+			_ = stmt.Close()
 		}
 		GlobalError = err
 	}

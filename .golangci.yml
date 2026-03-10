@@ -1,4 +1,4 @@
-version: 2
+
 
 run:
   timeout: 5m
@@ -19,13 +19,12 @@ linters:
     - tparallel # related to paralleltest
     - wsl # too opinionated about whitespace
     - nlreturn # too opinionated about newlines
-    - gomnd # we use magic numbers for pointer alignment/offsets
+    - mnd # we use magic numbers for pointer alignment/offsets
     - ireturn # we sometimes return interfaces for compatibility
     - nonamedreturns # we use named returns for documentation
     - tagalign # too noisy
     - tagliatelle # we use standard naming
     - exhaustive # sometimes too much
-    - exhaustivestruct # deprecated
 
 linters-settings:
   govet:

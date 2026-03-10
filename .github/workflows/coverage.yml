@@ -33,7 +33,3 @@ jobs:
           config: .test-coverage.yml
           git-token: ${{ secrets.GITHUB_TOKEN }}
           git-branch: badge # Or wherever you want to store badges
-          report: true
-          chart: true
-          help: true
-          fail-on-negative-delta: true
