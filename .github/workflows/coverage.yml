@@ -32,5 +32,6 @@ jobs:
         with:
           profile: coverage.out
           config: .test-coverage.yml
-          git-token: ${{ secrets.GITHUB_TOKEN }}
-          git-branch: badge # Or wherever you want to store badges
+          git-token: ${{ github.ref_name == 'main' && secrets.GITHUB_TOKEN || '' }}
+          git-branch: badges
+          permissions: write-all

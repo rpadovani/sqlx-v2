@@ -39,7 +39,6 @@ jobs:
       - name: Run Tests (Scripts)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          chmod +x scripts/run_tests.sh
           ./scripts/run_tests.sh
 
       - name: Run Tests (Manual)
@@ -81,5 +80,4 @@ jobs:
 
       - name: Run Fuzzing (Short)
         run: |
-          chmod +x scripts/run_fuzz.sh
           ./scripts/run_fuzz.sh 30s
