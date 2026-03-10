@@ -42,7 +42,7 @@ func TestGC_WriteBarrierViolation(t *testing.T) {
 	oldGC := debug.SetGCPercent(1)
 	defer debug.SetGCPercent(oldGC)
 
-	for i := 0; i < 10000; i++ {
+	for i := range 10000 {
 		rowVal := reflect.New(reflect.TypeFor[Row]())
 		rowPtr := rowVal.Elem().Addr().UnsafePointer()
 
