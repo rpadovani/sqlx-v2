@@ -270,7 +270,6 @@ func SelectIter[T any](ctx context.Context, q QueryerContext, query string, args
 			}
 			return nil
 		})
-
 		if err != nil {
 			yield(zero, fmt.Errorf("sqlx: error in SelectIter scan: %w", err))
 		}

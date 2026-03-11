@@ -50,8 +50,10 @@ var baseTypes = []reflect.Type{
 	reflect.TypeOf(struct{}{}),
 }
 
-var typeCache sync.Map
-var typeCount int32
+var (
+	typeCache sync.Map
+	typeCount int32
+)
 
 func buildDynamicStruct(data []byte) reflect.Type {
 	if len(data) == 0 {

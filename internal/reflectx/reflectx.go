@@ -69,9 +69,9 @@ type FieldInfo struct {
 
 // Step represents a single level of dereferencing or offset in a struct traversal.
 type Step struct {
-	Offset   uintptr
-	Type     reflect.Type   // If not nil, this step is a pointer that might need allocation of this Type
-	PtrType  reflect.Type   // Cache of reflect.PointerTo(Type) for zero-allocation write barrier Set
+	Offset  uintptr
+	Type    reflect.Type // If not nil, this step is a pointer that might need allocation of this Type
+	PtrType reflect.Type // Cache of reflect.PointerTo(Type) for zero-allocation write barrier Set
 }
 
 // StructMap represents a mapped struct, with fields flattened
@@ -166,16 +166,11 @@ func (m *Mapper) TypeMap(t reflect.Type) *StructMap {
 	}
 
 	// Use singleflight to prevent cache stampede for this specific type.
-	key := fmt.Sprintf("%p", t)
-	name := t.String()
-	var hash uint64 = 14695981039346656037
-	for i := 0; i < len(name); i++ {
-		hash ^= uint64(name[i])
-		hash *= 1099511628211
-	}
-	bucket := hash % 256
+	// We use the type's string representation as the key.
+	typeName := t.String()
+	bucket := len(typeName) % 256 // Simple distribution
 
-	v, _, _ := m.sfBuckets[bucket].Do(key, func() (any, error) {
+	v, _, _ := m.sfBuckets[bucket].Do(typeName, func() (any, error) {
 		// Double-check cache inside singleflight
 		if v, ok := m.cache.Load(t); ok {
 			return v.(*StructMap), nil

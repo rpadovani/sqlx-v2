@@ -38,7 +38,7 @@ func TestGC_WriteBarrierViolation(t *testing.T) {
 	if fiCanary == nil {
 		t.Fatal("missing field 'nested.canary'")
 	}
-	
+
 	oldGC := debug.SetGCPercent(1)
 	defer debug.SetGCPercent(oldGC)
 
@@ -67,8 +67,8 @@ func TestGC_WriteBarrierViolation(t *testing.T) {
 		if row.Nested.Canary == nil {
 			t.Fatalf("iteration %d: Canary pointer is nil (GC reclaimed it!)", i)
 		}
-		if row.Nested.Canary.MagicValue != canaryMagic + i {
-			t.Fatalf("iteration %d: Canary value corrupted, got %x but expected %x", i, row.Nested.Canary.MagicValue, canaryMagic + i)
+		if row.Nested.Canary.MagicValue != canaryMagic+i {
+			t.Fatalf("iteration %d: Canary value corrupted, got %x but expected %x", i, row.Nested.Canary.MagicValue, canaryMagic+i)
 		}
 
 		runtime.KeepAlive(garbage)

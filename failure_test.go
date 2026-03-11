@@ -20,9 +20,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"testing"
-
 	"strings"
+	"testing"
 
 	"github.com/rpadovani/sqlx-v2"
 	_ "github.com/rpadovani/sqlx-v2/internal/mockdb"

@@ -1,0 +1,75 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  matrix-scan:
+    name: Integrity Matrix (Scan)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: ['1.24', '1.25', '1.26']
+        os: [ubuntu-latest, macos-latest]
+        arch: [amd64, arm64]
+        exclude:
+          - os: macos-latest
+            arch: amd64 # Standard GitHub Hosted runners for macOS are arm64
+          - os: ubuntu-latest
+            arch: arm64 # Standard GitHub Hosted runners for Linux are amd64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go-version }}
+          check-latest: true
+          cache: true
+
+      - name: Run Tests (Scripts)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          ./scripts/run_tests.sh
+
+  shadow-parity:
+    name: Shadow Parity Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Run Shadow Tests
+        run: go test -v ./internal/shadow/...
+
+  fuzz-check:
+    name: Fuzzing Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Run Fuzzing (Short)
+        run: |
+          ./scripts/run_fuzz.sh 30s

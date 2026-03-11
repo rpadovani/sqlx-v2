@@ -1,0 +1,59 @@
+version: "2"
+run:
+  timeout: 5m
+
+linters:
+  default: all
+  disable:
+    - depguard
+    - forbidigo
+    - wrapcheck
+    - lll
+    - varnamelen
+    - cyclop
+    - exhaustruct
+    - paralleltest
+    - testpackage
+    - tparallel
+    - wsl
+    - wsl_v5
+    - noctx
+    - unqueryvet
+    - embeddedstructfieldcheck
+    - funcorder
+    - noinlineerr
+    - prealloc
+    - nlreturn
+    - mnd
+    - ireturn
+    - nonamedreturns
+    - tagalign # too noisy
+    - tagliatelle # we use standard naming
+    - exhaustive # sometimes too much
+    - gocognit # complex scanning logic is expected
+    - err113 # dynamic errors are common and v1 compat requires some
+    - forcetypeassert # hot path type asserts are used heavily
+    - funlen # long functions exist in tests and old V1 code
+    - gochecknoglobals # performance caches and pools are necessarily global
+    - nestif # reflection traversal is deeply nested
+    - goconst # tests use many repeated string literals
+    - gochecknoinits # init is used in some legacy or test files
+    - godot # we don't strictly enforce periods in comments
+    - dupl # tests have duplicated boilerplate
+    - usetesting # context.Background() in tests is fine
+    - gosec # we don't need crypto/rand everywhere
+    - inamedparam # Scan(any) is standard in some interface defs
+    - musttag # sqlx allows fields without db tags
+    - nilnil # returns like (nil, nil) are used in V1 API shapes
+    - rowserrcheck # returning *sql.Rows without checking Err() is standard
+    - errorlint # v1 compat relies on direct error == comparisons
+    - perfsprint # fmt.Errorf is used extensively for standard error creation
+    - gocyclo # reflection traversal is complex by design
+    - revive # unused parameters in interface implementations are expected
+    - sqlclosecheck # benchmarks purposefully leave some rows unclosed for GC testing
+    - thelper # test helpers don't always need t.Helper() overhead
+    - unconvert # some explicit type conversions are necessary in unsafe context
+    - intrange # V1 compat requires classic loop structures
+    - gocritic # some complex if-else blocks are structurally clearer than switch
+    - errname # legacy exported err constants exist without Err prefix
+    - godox # TODOs and FIXMEs are active issues that shouldn't break CI

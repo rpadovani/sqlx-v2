@@ -253,7 +253,7 @@ func iterateScan(rows *sql.Rows, elemType reflect.Type, isUnsafe, strictTagParsi
 		err := func() error {
 			vp := alloc()
 			defer runtime.KeepAlive(vp)
-			base := unsafe.Pointer(vp.Pointer())
+			base := vp.UnsafePointer()
 
 			populateScanDest(base, meta, scanDest)
 
@@ -321,7 +321,6 @@ func getScan(rows *sql.Rows, dest any, isUnsafe, strictTagParsing bool, mapper *
 		found = true
 		return ErrStopIter
 	})
-
 	if err != nil {
 		return err
 	}

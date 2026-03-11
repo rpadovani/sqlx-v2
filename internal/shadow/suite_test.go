@@ -22,11 +22,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-	v1sqlx "github.com/jmoiron/sqlx"
-
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/google/go-cmp/cmp"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	v1sqlx "github.com/jmoiron/sqlx"
 	_ "modernc.org/sqlite"
 
 	sqlx "github.com/rpadovani/sqlx-v2"
@@ -151,10 +150,12 @@ func TestEdgeCase_ShadowedFields(t *testing.T) {
 }
 
 // Case 3: Nested Pointers and Aliased Primitives
-type MyInt int
-type NestedAlias struct {
-	Age *MyInt `db:"age"`
-}
+type (
+	MyInt       int
+	NestedAlias struct {
+		Age *MyInt `db:"age"`
+	}
+)
 
 func TestEdgeCase_AliasedPrimitives(t *testing.T) {
 	RunTestSuite(t, "Aliased", func(t *testing.T, driver, dsn string) {

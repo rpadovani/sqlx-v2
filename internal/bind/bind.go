@@ -66,7 +66,6 @@ func init() {
 			BindDriver(driver, bind)
 		}
 	}
-
 }
 
 // BindType returns the bindtype for a given database given a drivername.
@@ -135,7 +134,6 @@ func asSliceForIn(i any) (v reflect.Value, ok bool) {
 	// []byte is a driver.Value type so it should not be expanded
 	if t == reflect.TypeFor[[]byte]() {
 		return reflect.Value{}, false
-
 	}
 
 	return v, true

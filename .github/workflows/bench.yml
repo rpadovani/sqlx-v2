@@ -1,0 +1,103 @@
+# name: Benchmarks
+
+# on:
+#   pull_request:
+#     branches: [main]
+
+# permissions:
+#   contents: read
+#   pull-requests: write
+
+# jobs:
+#   benchmark:
+#     name: Performance Gate
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Base
+#         uses: actions/checkout@v5
+#         with:
+#           ref: ${{ github.base_ref }}
+#           path: base
+
+#       - name: Checkout Head
+#         uses: actions/checkout@v5
+#         with:
+#           path: head
+
+#       - name: Set up Go
+#         uses: actions/setup-go@v6
+#         with:
+#           go-version: '1.24'
+#           cache: true
+
+#       - name: Install Benchstat
+#         run: go install golang.org/x/perf/cmd/benchstat@latest
+
+#       - name: Benchmark Base
+#         run: |
+#           cd base
+#           go test -bench=. -benchmem -count=5 ./... > ../base_bench.txt
+
+#       - name: Benchmark Head
+#         run: |
+#           cd head
+#           # Run benchmarks and output to file
+#           go test -bench=. -benchmem -count=5 -p 1 ./... > ../head_bench.txt
+
+#       - name: Compare Benchmarks
+#         id: compare
+#         run: |
+#           benchstat base_bench.txt head_bench.txt > bench_diff.txt
+#           cat bench_diff.txt
+
+#       - name: Check for Regressions
+#         run: |
+#           # Parse benchstat output for any line containing a positive delta (regression)
+#           # We look for lines with: name ... [old] ... [new] ... +X.XX%
+#           # We fail if any latency (time/op) regression > 3% or any allocation increase > 0%
+          
+#           echo "Analyzing benchstat for regressions..."
+          
+#           # This awk script identifies regressions based on the user's specific thresholds
+#           awk '
+#           /time\/op/ { mode="time" }
+#           /allocs\/op/ { mode="allocs" }
+#           /B\/op/ { mode="bytes" }
+          
+#           /[-+]+[0-9]+\.[0-9]+%/ {
+#             # Extract the delta percentage
+#             split($0, parts, " ")
+#             for (i=1; i<=length(parts); i++) {
+#               if (parts[i] ~ /[-+]+[0-9]+\.[0-9]+%/) {
+#                 delta = substr(parts[i], 1, length(parts[i])-1) + 0
+#                 name = parts[1]
+                
+#                 if (mode == "time" && delta > 3.0) {
+#                   print "❌ LATENCY REGRESSION: " name " increased by " delta "% (limit 3%)"
+#                   err = 1
+#                 }
+#                 if ((mode == "allocs" || mode == "bytes") && delta > 0.0) {
+#                   print "❌ ALLOCATION INCREASE: " name " (" mode ") increased by " delta "% (limit 0%)"
+#                   err = 1
+#                 }
+#               }
+#             }
+#           }
+#           END { exit err }
+#           ' bench_diff.txt
+
+#       - name: Comment PR
+#         if: always()
+#         uses: actions/github-script@v7
+#         with:
+#           script: |
+#             const fs = require('fs');
+#             if (fs.existsSync('bench_diff.txt')) {
+#               const diff = fs.readFileSync('bench_diff.txt', 'utf8');
+#               github.rest.issues.createComment({
+#                 issue_number: context.issue.number,
+#                 owner: context.repo.owner,
+#                 repo: context.repo.repo,
+#                 body: "### Performance Comparison (Benchstat)\n```\n" + diff + "\n```"
+#               })
+#             }
