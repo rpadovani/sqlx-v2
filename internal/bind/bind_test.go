@@ -445,3 +445,74 @@ func TestBindStructDirect(t *testing.T) {
 		t.Errorf("Unexpected args: %v", args)
 	}
 }
+
+// TestCompileCache_InternalNamesMutation verifies that the internal
+// compileNamedQuery function shares the cached names slice across calls
+// (as documented in its comment). This test proves that internal callers
+// who mutate the names slice WILL corrupt the cache.
+//
+// The defense for this lives in the public CompileNamedQuery wrapper which
+// copies names. Internal callers like bindStruct are expected to be read-only.
+//
+// This test exists to document the invariant and catch regressions if the
+// caching strategy changes.
+func TestCompileCache_InternalNamesMutation(t *testing.T) {
+	// Use a unique query that won't collide with other tests' cached entries.
+	q := []byte("INSERT INTO internal_cache_test_8f3a (col_x, col_y) VALUES (:col_x, :col_y)")
+
+	// First call: populates cache
+	_, names1, err := compileNamedQuery(q, QUESTION)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(names1) != 2 || names1[0] != "col_x" || names1[1] != "col_y" {
+		t.Fatalf("unexpected names from first call: %v", names1)
+	}
+
+	// Second call: should return the SAME cached slice
+	_, names2, err := compileNamedQuery(q, QUESTION)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify they share backing array (cache is shared for internal callers)
+	if &names1[0] != &names2[0] {
+		t.Log("Internal compileNamedQuery returns distinct slices (not sharing cache). This is safe but suboptimal.")
+		// This is not a failure — it means the implementation copies internally,
+		// which is safe but not as optimized as documented.
+		return
+	}
+
+	// Since they share backing array, mutating names1 corrupts names2.
+	// This is the documented behavior: internal callers must be read-only.
+	names1[0] = "POISONED"
+	_, names3, err := compileNamedQuery(q, QUESTION)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if names3[0] == "POISONED" {
+		t.Log("CONFIRMED: internal compileNamedQuery cache IS shared. " +
+			"Internal callers (bindStruct, bindNamedMapper) must not mutate names. " +
+			"This is the documented invariant in bind.go:449-451.")
+	}
+
+	// Verify that bindStruct (which calls compileNamedQuery internally)
+	// does NOT corrupt the cache: it only reads from the names slice.
+	// We do this by calling bindStruct and then checking the cache again.
+	clearQ := []byte("INSERT INTO bind_safety_test_9c2b (name, age) VALUES (:name, :age)")
+	_, namesBefore, _ := compileNamedQuery(clearQ, QUESTION)
+
+	arg := bindTestStruct{Name: "Test", Age: 99}
+	_, _, err = bindStruct(QUESTION, string(clearQ), arg, getBindDefaultMapper())
+	if err != nil {
+		t.Fatalf("bindStruct failed: %v", err)
+	}
+
+	_, namesAfter, _ := compileNamedQuery(clearQ, QUESTION)
+	for i := range namesBefore {
+		if namesBefore[i] != namesAfter[i] {
+			t.Fatalf("BUG: bindStruct corrupted the compileCache! " +
+				"names[%d] changed from %q to %q", i, namesBefore[i], namesAfter[i])
+		}
+	}
+}

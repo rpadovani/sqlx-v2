@@ -103,6 +103,38 @@ Data paths undergo algorithmic bounds verification via Go property mapping frame
 
 ---
 
+## Unsafe Mode
+
+By default, sqlx-v2 returns an error when the database returns columns that don't have a matching field in your destination struct. This is a safety feature that catches schema drift and typos early.
+
+**Unsafe mode** disables this check, silently discarding any unmatched columns. This is useful when you use `SELECT *` but only care about a subset of the returned columns.
+
+```go
+// Enable on a DB
+db := sqlx.NewDb(rawDB, "pgx")
+db.Unsafe = true
+
+// Or create an unsafe copy (original is unchanged)
+unsafeDB := db.UnsafeDB()
+
+// Works on transactions too
+tx.Unsafe = true
+```
+
+### How it works
+
+In safe mode (default), scanning a query like `SELECT id, name, email, extra_col` into a struct that only has `ID`, `Name`, `Email` fields will return:
+
+```
+sqlx: missing destination name "extra_col" in struct MyStruct
+```
+
+In unsafe mode, `extra_col` is scanned into a discard slot and silently ignored. All matched columns are still mapped correctly.
+
+This behavior is inherited from [jmoiron/sqlx](https://github.com/jmoiron/sqlx) for full compatibility.
+
+---
+
 ## Subsystem Interface
 
 The library exports legacy signatures corresponding to internal definitions modeled by `jmoiron/sqlx` for binary-compatible drop-in. 

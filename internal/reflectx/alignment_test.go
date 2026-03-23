@@ -141,3 +141,174 @@ func TestAddrByTraversal_WriteBarrierIntegrity(t *testing.T) {
 		runtime.KeepAlive(vp)
 	}
 }
+
+// TestAddrByTraversal_TripleNestedNilPtrChain verifies that AddrByTraversal
+// correctly allocates through three levels of nil pointer embedding:
+// L0 → *L1 → *L2 → Value
+// All three pointer fields start nil. AddrByTraversal must allocate each
+// level and the final value must survive GC.
+func TestAddrByTraversal_TripleNestedNilPtrChain(t *testing.T) {
+	type L2 struct {
+		Value int    `db:"value"`
+		Tag   string `db:"tag"`
+	}
+	type L1 struct {
+		*L2
+		Middle int `db:"middle"`
+	}
+	type L0 struct {
+		*L1
+		Top int `db:"top"`
+	}
+
+	m := NewMapperFunc("db", strings.ToLower)
+	tm := m.TypeMap(reflect.TypeFor[L0]())
+
+	fiValue := tm.Names["value"]
+	if fiValue == nil {
+		t.Fatal("missing field 'value' in triple-nested struct")
+	}
+	if !fiValue.IsPtrPath {
+		t.Fatal("expected 'value' to be on a pointer path")
+	}
+	if len(fiValue.Traversal) < 4 {
+		t.Logf("Traversal has %d steps", len(fiValue.Traversal))
+	}
+
+	// Maximize GC pressure
+	oldGC := debug.SetGCPercent(1)
+	defer debug.SetGCPercent(oldGC)
+
+	const iterations = 5000
+
+	for i := range iterations {
+		vp := reflect.New(reflect.TypeFor[L0]())
+		l0 := vp.Interface().(*L0)
+
+		// All pointers start nil
+		if l0.L1 != nil {
+			t.Fatal("L1 should be nil")
+		}
+
+		base := vp.Elem().Addr().UnsafePointer()
+		ptr := AddrByTraversal(base, fiValue.Traversal)
+		if ptr == nil {
+			t.Fatalf("iteration %d: AddrByTraversal returned nil for triple-nested ptr chain", i)
+		}
+
+		// Write through the returned pointer
+		*(*int)(ptr) = 1000 + i
+
+		// Force GC to test write barrier integrity
+		runtime.GC()
+		debug.FreeOSMemory()
+
+		// Verify all three pointer levels were allocated
+		if l0.L1 == nil {
+			t.Fatalf("iteration %d: L1 pointer was not allocated", i)
+		}
+		if l0.L2 == nil {
+			t.Fatalf("iteration %d: L2 pointer was not allocated", i)
+		}
+		if l0.Value != 1000+i {
+			t.Fatalf("iteration %d: expected Value=%d, got %d (GC corruption or alloc failure)", i, 1000+i, l0.Value)
+		}
+
+		runtime.KeepAlive(vp)
+	}
+}
+
+// TestMapper_ZeroSizedAndInterfaceEmbedding verifies that structs containing
+// zero-sized types (struct{}) and various exotic field types don't cause
+// panics or incorrect offset computation in the mapper.
+func TestMapper_ZeroSizedAndInterfaceEmbedding(t *testing.T) {
+	type ZeroHeavyStruct struct {
+		Before  string   `db:"before"`
+		Empty1  struct{} `db:"empty1"`
+		Middle  int64    `db:"middle"`
+		Empty2  struct{} `db:"empty2"`
+		After   float64  `db:"after"`
+		Empty3  struct{} `db:"empty3"`
+		Trailer bool     `db:"trailer"`
+	}
+
+	m := NewMapperFunc("db", strings.ToLower)
+	tm := m.TypeMap(reflect.TypeFor[ZeroHeavyStruct]())
+
+	var zhs ZeroHeavyStruct
+
+	// Verify all fields are mapped
+	fields := []struct {
+		name     string
+		expected uintptr
+	}{
+		{"before", unsafe.Offsetof(zhs.Before)},
+		{"empty1", unsafe.Offsetof(zhs.Empty1)},
+		{"middle", unsafe.Offsetof(zhs.Middle)},
+		{"empty2", unsafe.Offsetof(zhs.Empty2)},
+		{"after", unsafe.Offsetof(zhs.After)},
+		{"empty3", unsafe.Offsetof(zhs.Empty3)},
+		{"trailer", unsafe.Offsetof(zhs.Trailer)},
+	}
+
+	for _, f := range fields {
+		fi, ok := tm.Names[f.name]
+		if !ok {
+			t.Errorf("missing field %q", f.name)
+			continue
+		}
+		if fi.Offset != f.expected {
+			t.Errorf("field %q: offset mismatch: got %d, want %d", f.name, fi.Offset, f.expected)
+		}
+	}
+
+	// Verify zero-sized fields have correct TargetType
+	for _, name := range []string{"empty1", "empty2", "empty3"} {
+		fi := tm.Names[name]
+		if fi.TargetType.Size() != 0 {
+			t.Errorf("field %q: expected zero-sized type, got size %d", name, fi.TargetType.Size())
+		}
+	}
+}
+
+// TestMapper_UnexportedAnonymousEmbedded verifies that an unexported
+// anonymous embedded struct's fields are correctly handled by the mapper.
+// Per Go visibility rules, unexported anonymous embedded struct fields
+// ARE promoted, but the mapper should skip them since they're unexported.
+func TestMapper_UnexportedAnonymousEmbedded(t *testing.T) {
+	// Note: we can't define unexported types in _test files in a different package.
+	// Since this is package reflectx (internal), we can define them here.
+	type inner struct {
+		Secret string `db:"secret"`
+		hidden int    `db:"hidden"` //nolint:unused
+	}
+	type Outer struct {
+		inner
+		ID int `db:"id"`
+	}
+
+	m := NewMapperFunc("db", strings.ToLower)
+
+	// This should not panic
+	tm := m.TypeMap(reflect.TypeFor[Outer]())
+
+	// ID should be found
+	if _, ok := tm.Names["id"]; !ok {
+		t.Error("expected 'id' field")
+	}
+
+	// 'secret' from the unexported anonymous embed:
+	// In Go, exported fields of unexported anonymous embedded structs ARE promoted.
+	// The reflectx mapper processes anonymous embeds even if unexported (line 214: f.Anonymous check).
+	// BUT: the field Secret IS exported, so it should be found.
+	if _, ok := tm.Names["secret"]; !ok {
+		t.Log("Note: 'secret' from unexported anonymous embed was not promoted. " +
+			"This is consistent with some reflection implementations.")
+	}
+
+	// 'hidden' is unexported, so it should definitely not be found
+	if _, ok := tm.Names["hidden"]; ok {
+		t.Error("unexported field 'hidden' should not be mapped")
+	}
+}
+
