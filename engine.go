@@ -141,6 +141,11 @@ func buildMeta(t reflect.Type, columns []string, tm *reflectx.StructMap, isUnsaf
 			}
 		} else if !isUnsafe {
 			return nil, fmt.Errorf("sqlx: missing destination name %q in struct %s: %w", col, t.Name(), bind.ErrColumnNotFound)
+		} else {
+			// In unsafe mode, unmatched columns are silently discarded.
+			// We must still set colIndex so populateScanDest creates a
+			// discard slot (new(any)) at the correct scanDest position.
+			meta[i] = fieldMeta{colIndex: i}
 		}
 	}
 
