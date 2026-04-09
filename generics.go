@@ -24,8 +24,7 @@ import (
 	"unsafe"
 )
 
-// SelectG executes a query and returns a slice of T, using generics for type safety.
-// It uses pre-calculated struct field offsets for efficient scanning.
+// SelectG executes a query and returns a slice of T.
 //
 //	users, err := sqlx.SelectG[User](ctx, db, "SELECT * FROM users WHERE active = ?", true)
 func SelectG[T any](ctx context.Context, q QueryerContext, query string, args ...any) (res []T, err error) {
@@ -139,9 +138,7 @@ func SelectG[T any](ctx context.Context, q QueryerContext, query string, args ..
 	return results, nil
 }
 
-// GetG executes a query that is expected to return at most one row,
-// scanning it into a value of type T. It uses pre-calculated struct field
-// offsets for efficient scanning.
+// GetG executes a query expected to return at most one row, scanning it into T.
 //
 //	user, err := sqlx.GetG[User](ctx, db, "SELECT * FROM users WHERE id = ?", 1)
 func GetG[T any](ctx context.Context, q QueryerContext, query string, args ...any) (res T, err error) {
@@ -237,9 +234,7 @@ func GetG[T any](ctx context.Context, q QueryerContext, query string, args ...an
 	}
 }
 
-// SelectIter returns an iterator (iter.Seq2) that streams rows one at a time,
-// scanning each into a value of type T using pre-calculated struct field
-// offsets. This avoids loading all results into memory at once.
+// SelectIter returns an iterator that streams rows one at a time as values of type T.
 //
 //	for user, err := range sqlx.SelectIter[User](ctx, db, "SELECT * FROM users") {
 //	    if err != nil {
