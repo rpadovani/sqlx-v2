@@ -20,7 +20,7 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/rpadovani/sqlx-v2/internal/shadow"
+	"github.com/rpadovani/sqlx-v2/tests/internal/shadow"
 )
 
 func newSQLiteDB(t *testing.T) *sql.DB {

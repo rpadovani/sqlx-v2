@@ -36,6 +36,14 @@ jobs:
           check-latest: true
           cache: true
 
+      - name: Run Tests
+        run: |
+          for mod in $(find . -name go.mod -type f); do
+            dir=$(dirname "$mod")
+            echo "Testing module in $dir"
+            (cd "$dir" && go test -v ./...)
+          done
+
       - name: Run Tests (Scripts)
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -55,7 +63,13 @@ jobs:
           cache: true
 
       - name: Run Shadow Tests
-        run: go test -v ./internal/shadow/...
+        run: |
+          for mod in $(find . -name go.mod -type f); do
+            dir=$(dirname "$mod")
+            if [ -d "$dir/internal/shadow" ]; then
+              (cd "$dir" && go test -v ./internal/shadow/...)
+            fi
+          done
 
   fuzz-check:
     name: Fuzzing Verification

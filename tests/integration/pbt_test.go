@@ -26,7 +26,7 @@ import (
 	_ "modernc.org/sqlite"
 
 	sqlx "github.com/rpadovani/sqlx-v2"
-	"github.com/rpadovani/sqlx-v2/internal/testutil"
+	"github.com/rpadovani/sqlx-v2/tests/internal/testutil"
 )
 
 // PBTStruct represents a generated database row containing various supported scalar types.

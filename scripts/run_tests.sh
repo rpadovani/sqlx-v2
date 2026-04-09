@@ -22,11 +22,19 @@ export CXX=clang++
 echo "==========================================="
 echo "Running All Tests with Race Sanitizer"
 echo "==========================================="
-go test -v -race ./...
+for mod in $(find . -name go.mod -type f); do
+  dir=$(dirname "$mod")
+  echo "Testing module in $dir"
+  (cd "$dir" && go test -v -race ./...)
+done
 
 echo "==========================================="
 echo "Running All Tests with Memory Sanitizer (MSAN)"
 echo "==========================================="
-go test -v -msan ./...
+for mod in $(find . -name go.mod -type f); do
+  dir=$(dirname "$mod")
+  echo "Testing module in $dir"
+  (cd "$dir" && go test -v -msan ./...)
+done
 
 echo "Success: All tests passed with -race and -msan."
