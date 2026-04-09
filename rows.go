@@ -103,10 +103,11 @@ type Rows struct {
 	Mapper           *reflectx.Mapper
 	Unsafe           bool
 	StrictTagParsing bool
-	// started and meta are used for StructScan caching
+	// started, meta, and baseType are used for StructScan caching
 	started  bool
 	meta     []fieldMeta
 	scanDest []any
+	baseType reflect.Type
 }
 
 type fieldMeta struct {
@@ -157,6 +158,9 @@ func (r *Rows) StructScan(dest any) error {
 		r.scanDest = make([]any, len(meta))
 
 		r.started = true
+		r.baseType = elemType
+	} else if r.baseType != elemType {
+		return fmt.Errorf("sqlx: StructScan called with structurally different type than previous iteration (expected %s, got %s)", r.baseType, elemType)
 	}
 
 	vp := reflect.ValueOf(dest)
