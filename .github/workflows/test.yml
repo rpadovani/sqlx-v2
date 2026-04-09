@@ -35,6 +35,7 @@ jobs:
           go-version: ${{ matrix.go-version }}
           check-latest: true
           cache: true
+          cache-dependency-path: 'go.sum'
 
       - name: Run Tests
         run: |
@@ -67,6 +68,7 @@ jobs:
         with:
           go-version: '1.25'
           cache: true
+          cache-dependency-path: 'go.sum'
 
       - name: Run Shadow Tests
         run: |
@@ -89,6 +91,7 @@ jobs:
         with:
           go-version: '1.24'
           cache: true
+          cache-dependency-path: 'go.sum'
 
       - name: Run Fuzzing (Short)
         run: |
