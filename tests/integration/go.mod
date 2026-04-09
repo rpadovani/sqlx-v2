@@ -1,6 +1,6 @@
 module github.com/rpadovani/sqlx-v2/tests
 
-go 1.25.0
+go 1.24.0
 
 replace github.com/rpadovani/sqlx-v2 => ../../
 
@@ -11,6 +11,7 @@ require (
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/leanovate/gopter v0.2.11
+	github.com/mattn/go-sqlite3 v1.14.34
 	github.com/rpadovani/sqlx-v2 v0.0.0-00010101000000-000000000000
 	github.com/testcontainers/testcontainers-go v0.42.0
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.42.0
