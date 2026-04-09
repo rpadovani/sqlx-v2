@@ -194,6 +194,11 @@ func (m *Mapper) mapType(t reflect.Type) *StructMap {
 		Names: make(map[string]*FieldInfo),
 	}
 	sm.Tree = &FieldInfo{}
+	
+	if t.Kind() != reflect.Struct {
+		return sm
+	}
+	
 	visited := make(map[reflect.Type]bool)
 	sm.Index = m.flattenFields(sm, t, sm.Tree, "", nil, visited)
 	return sm
