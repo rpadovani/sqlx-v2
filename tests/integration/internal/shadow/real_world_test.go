@@ -22,7 +22,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "modernc.org/sqlite"
 
-	"github.com/rpadovani/sqlx-v2/internal/testutil"
+	"github.com/rpadovani/sqlx-v2/tests/internal/testutil"
 )
 
 func TestRealWorldShadowParity_SQLite(t *testing.T) {
