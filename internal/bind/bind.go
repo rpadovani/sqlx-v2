@@ -27,20 +27,14 @@ import (
 	"github.com/rpadovani/sqlx-v2/internal/reflectx"
 )
 
-// ErrBindMismatch is returned when there is a mismatch between binding variables and parameters.
-var ErrBindMismatch = errors.New("sqlx: bind count mismatch")
-
-// ErrNamedPropertyNotFound is returned when a named parameter cannot be found in the provided struct or map.
-var ErrNamedPropertyNotFound = errors.New("sqlx: named property not found")
-
-// ErrUnsupportedType is returned when an unsupported type is provided for binding.
-var ErrUnsupportedType = errors.New("sqlx: unsupported type")
-
-// ErrSyntax is returned when there is a syntax error in the query parsing.
-var ErrSyntax = errors.New("sqlx: query syntax error")
-
-// ErrColumnNotFound is returned when a column from the database cannot be mapped to a destination.
-var ErrColumnNotFound = errors.New("sqlx: column not found")
+// Sentinel errors for bind operations.
+var (
+	ErrBindMismatch         = errors.New("sqlx: bind count mismatch")
+	ErrNamedPropertyNotFound = errors.New("sqlx: named property not found")
+	ErrUnsupportedType      = errors.New("sqlx: unsupported type")
+	ErrSyntax               = errors.New("sqlx: query syntax error")
+	ErrColumnNotFound       = errors.New("sqlx: column not found")
+)
 
 // Bindvar types supported by Rebind, BindMap and BindStruct.
 const (
@@ -82,8 +76,6 @@ func BindDriver(driverName string, bindType int) {
 	binds.Store(driverName, bindType)
 }
 
-// FIXME: this should be able to be tolerant of escaped ?'s in queries without
-// losing much speed, and should be to avoid confusion.
 
 // Rebind a query from the default bindtype (QUESTION) to the target bindtype.
 func Rebind(bindType int, query string) string {
@@ -180,7 +172,7 @@ func In(query string, args ...any) (string, []any, error) {
 			flatArgsCount += meta[i].length
 
 			if meta[i].length == 0 {
-				return "", nil, fmt.Errorf("sqlx: empty slice passed to 'In' query: %w", sql.ErrNoRows) // Using sql.ErrNoRows as a semi-appropriate wrapper or just fmt.Errorf
+				return "", nil, fmt.Errorf("sqlx: empty slice passed to 'In' query: %w", sql.ErrNoRows)
 			}
 		} else {
 			meta[i].i = arg
@@ -525,14 +517,13 @@ func bindNamedMapper(bindType int, query string, arg any, m *reflectx.Mapper) (s
 	}
 	switch {
 	case k == reflect.Struct:
-		// Fast path: struct binding (most common case for NamedExec)
 		return bindStruct(bindType, query, arg, m)
 	case k == reflect.Map && t.Key().Kind() == reflect.String:
 		m, ok := convertMapStringInterface(arg)
 		if !ok {
 			return "", nil, fmt.Errorf("sqlx: unsupported map type %T: %w", arg, ErrUnsupportedType)
 		}
-		// bindMap inline
+
 		bound, names, err := compileNamedQuery([]byte(query), bindType)
 		if err != nil {
 			return "", []any{}, fmt.Errorf("sqlx: error in compileNamedQuery (map): %w", err)

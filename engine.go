@@ -16,6 +16,7 @@ package sqlx
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"runtime"
@@ -26,8 +27,7 @@ import (
 	"github.com/rpadovani/sqlx-v2/internal/reflectx"
 )
 
-// scanPool pools []any slices used for scanning rows.
-// This avoids heap-thrashing from allocating new slices for each row.
+// scanPool pools []any slices to avoid per-row heap allocations.
 
 var scanPool = sync.Pool{
 	New: func() any {
@@ -36,7 +36,7 @@ var scanPool = sync.Pool{
 	},
 }
 
-// getScanDest returns a pooled []any slice of the given size.
+// getScanDest returns a pooled []any slice with at least size capacity.
 func getScanDest(size int) []any {
 	sp := scanPool.Get().(*[]any)
 	s := *sp
@@ -48,7 +48,7 @@ func getScanDest(size int) []any {
 	return s
 }
 
-// putScanDest returns a []any slice to the pool.
+// putScanDest nils all elements and returns the slice to the pool.
 func putScanDest(s []any) {
 	s = s[:cap(s)]
 	for i := range s {
@@ -57,8 +57,8 @@ func putScanDest(s []any) {
 	scanPool.Put(&s)
 }
 
-// populateScanDest fills the scanDest slice with pointers to fields in the struct
-// based on the pre-calculated fieldMeta.
+// populateScanDest writes field pointers into scanDest using pre-calculated offsets.
+// Unmatched columns (traversal == nil) get a discard slot.
 func populateScanDest(base unsafe.Pointer, meta []fieldMeta, scanDest []any) {
 	for _, m := range meta {
 		if m.traversal == nil {
@@ -102,10 +102,7 @@ type metaCacheValue struct {
 
 var metaCache sync.Map
 
-// buildMeta constructs the fieldMeta slice that maps each SQL column to its
-// corresponding struct field. This is the single source of truth for the
-// column→field mapping logic used by selectScan, getScan, Rows.StructScan,
-// and all generic scan functions.
+// buildMeta maps SQL columns to struct fields, caching results by type and column hash.
 func buildMeta(t reflect.Type, columns []string, tm *reflectx.StructMap, isUnsafe bool) ([]fieldMeta, error) {
 	key := metaCacheKey{
 		t:      t,
@@ -152,9 +149,8 @@ func buildMeta(t reflect.Type, columns []string, tm *reflectx.StructMap, isUnsaf
 	colsCopy := make([]string, len(columns))
 	copy(colsCopy, columns)
 
-	// Sort meta by offset for L1 cache sequential access in the hot loop
-	importSort := func(m []fieldMeta) {
-		// simple insertion sort since n is usually small (columns < 100)
+	// Sort by offset for cache-line locality in the scan hot loop.
+	sortByOffset := func(m []fieldMeta) {
 		for i := 1; i < len(m); i++ {
 			j := i
 			for j > 0 && m[j-1].offset < m[j].offset {
@@ -163,7 +159,7 @@ func buildMeta(t reflect.Type, columns []string, tm *reflectx.StructMap, isUnsaf
 			}
 		}
 	}
-	importSort(meta)
+	sortByOffset(meta)
 
 	metaCache.Store(key, metaCacheValue{
 		columns: colsCopy,
@@ -173,8 +169,7 @@ func buildMeta(t reflect.Type, columns []string, tm *reflectx.StructMap, isUnsaf
 	return meta, nil
 }
 
-// isScannable returns true if the given type is directly scannable by database/sql.
-// Types like string, int, float64, sql.NullString, etc. are scannable.
+// isScannable reports whether t can be passed directly to sql.Rows.Scan.
 func isScannable(t reflect.Type) bool {
 	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
@@ -200,11 +195,10 @@ func isScannable(t reflect.Type) bool {
 	return false
 }
 
-var ErrStopIter = fmt.Errorf("stop iteration")
+var ErrStopIter = errors.New("stop iteration")
 
-// iterateScan is the unified generic row processing engine.
-// It iterates over `rows`, calling `alloc` to get a reflect.Value for the destination pointer,
-// scans into it, and then calls `yield`. If `yield` returns ErrStopIter, iteration halts without an error.
+// iterateScan is the core row-processing loop. It allocates via alloc, scans,
+// and calls yield for each row. Return ErrStopIter from yield to halt early.
 func iterateScan(rows *sql.Rows, elemType reflect.Type, isUnsafe, strictTagParsing bool, mapper *reflectx.Mapper, alloc func() reflect.Value, yield func(reflect.Value) error) (err error) {
 	defer func() {
 		if cerr := rows.Close(); cerr != nil && err == nil {
@@ -279,7 +273,7 @@ func iterateScan(rows *sql.Rows, elemType reflect.Type, isUnsafe, strictTagParsi
 	return rows.Err()
 }
 
-// selectScan is the core implementation of Select. It scans rows into a slice of structs.
+// selectScan scans all rows into the dest slice.
 func selectScan(rows *sql.Rows, dest any, isUnsafe, strictTagParsing bool, mapper *reflectx.Mapper) error {
 	dv := reflect.ValueOf(dest)
 	if dv.Kind() != reflect.Pointer || dv.Elem().Kind() != reflect.Slice {
@@ -308,7 +302,7 @@ func selectScan(rows *sql.Rows, dest any, isUnsafe, strictTagParsing bool, mappe
 	})
 }
 
-// getScan is the core implementation of Get. It scans a single row into a dest.
+// getScan scans at most one row into dest, returning sql.ErrNoRows if empty.
 func getScan(rows *sql.Rows, dest any, isUnsafe, strictTagParsing bool, mapper *reflectx.Mapper) error {
 	dv := reflect.ValueOf(dest)
 	if dv.Kind() != reflect.Pointer {

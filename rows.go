@@ -128,6 +128,8 @@ func (r *Rows) MapScan(dest map[string]any) error {
 	return MapScan(r, dest)
 }
 
+// StructScan scans the current row into dest, which must be a pointer to a struct.
+// Field metadata is cached after the first call; subsequent calls must use the same type.
 func (r *Rows) StructScan(dest any) error {
 	dv := reflect.ValueOf(dest)
 	if dv.Kind() != reflect.Pointer || dv.Elem().Kind() != reflect.Struct {
