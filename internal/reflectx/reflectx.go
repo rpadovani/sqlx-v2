@@ -166,11 +166,13 @@ func (m *Mapper) TypeMap(t reflect.Type) *StructMap {
 	}
 
 	// Use singleflight to prevent cache stampede for this specific type.
-	// We use the type's string representation as the key.
+	// We use the type's string representation combined with its type descriptor address
+	// to prevent collisions between structurally distinct types sharing the same name path.
 	typeName := t.String()
+	sfKey := fmt.Sprintf("%s_%p", typeName, t)
 	bucket := len(typeName) % 256 // Simple distribution
 
-	v, _, _ := m.sfBuckets[bucket].Do(typeName, func() (any, error) {
+	v, _, _ := m.sfBuckets[bucket].Do(sfKey, func() (any, error) {
 		// Double-check cache inside singleflight
 		if v, ok := m.cache.Load(t); ok {
 			return v.(*StructMap), nil

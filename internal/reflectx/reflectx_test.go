@@ -526,3 +526,49 @@ func TestMapper_FieldMap_CachePoisoning(t *testing.T) {
 	}
 }
 
+func TestTypeMapCacheCollision(t *testing.T) {
+	// Different packages/local scopes can have structurally distinct types with the same short name.
+	// Since singleflight previously keyed on `t.String()`, this test ensures they don't collide.
+	getA := func() reflect.Type {
+		type User struct { ID int `db:"id"` }
+		return reflect.TypeFor[User]()
+	}
+	getB := func() reflect.Type {
+		type User struct { Count int `db:"count"` }
+		return reflect.TypeFor[User]()
+	}
+
+	typeA, typeB := getA(), getB()
+	if typeA.String() != typeB.String() {
+		t.Fatalf("Test assumption failed: types should have the same String() representation, got %s and %s", typeA.String(), typeB.String())
+	}
+
+	mapper := NewMapper("db")
+	startCh := make(chan struct{})
+	var wg sync.WaitGroup
+	workers := 1000
+	wg.Add(workers * 2)
+
+	for range workers {
+		go func() {
+			defer wg.Done()
+			<-startCh
+			res := mapper.TypeMap(typeA)
+			if _, ok := res.Names["id"]; !ok {
+				panic("mapA missing id (got mapB's fields on typeA!)")
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+			<-startCh
+			res := mapper.TypeMap(typeB)
+			if _, ok := res.Names["count"]; !ok {
+				panic("mapB missing count (got mapA's fields on typeB!)")
+			}
+		}()
+	}
+
+	close(startCh) // release all goroutines simultaneously
+	wg.Wait()
+}
