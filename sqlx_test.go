@@ -733,6 +733,48 @@ func TestRows_StructScan(t *testing.T) {
 	}
 }
 
+func TestRows_StructScan_TypeMismatchExploit(t *testing.T) {
+	rawDB, err := sql.Open("mockdb", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = rawDB.Close() }()
+
+	db := sqlx.NewDb(rawDB, "mockdb")
+	rows, err := db.Queryx("SELECT small:2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	if !rows.Next() {
+		t.Fatal("expected first row")
+	}
+
+	var s1 SmallStruct
+	if err := rows.StructScan(&s1); err != nil {
+		t.Fatal(err)
+	}
+
+	if !rows.Next() {
+		t.Fatal("expected second row")
+	}
+
+	type DummyAdmin struct {
+		Role  string
+		Power int
+		Score float64
+	}
+
+	var admin DummyAdmin
+	// This will use the cached metadata for SmallStruct and apply it to admin's memory layout.
+	// It should corrupt the memory or panic.
+	err = rows.StructScan(&admin)
+	if err == nil {
+		t.Errorf("expected error when structurally different type is used on second StructScan")
+	}
+}
+
 // =============================================================================
 // Conn tests
 // =============================================================================

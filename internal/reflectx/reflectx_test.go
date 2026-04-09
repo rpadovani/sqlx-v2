@@ -572,3 +572,15 @@ func TestTypeMapCacheCollision(t *testing.T) {
 	close(startCh) // release all goroutines simultaneously
 	wg.Wait()
 }
+
+func TestTypeMap_NonStructPanic(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("TypeMap panics on non-struct type: %v", r)
+		}
+	}()
+	m := NewMapper("db")
+	_ = m.TypeMap(reflect.TypeFor[map[string]any]())
+	_ = m.TypeMap(reflect.TypeFor[[]string]())
+	_ = m.TypeMap(reflect.TypeFor[int]())
+}
