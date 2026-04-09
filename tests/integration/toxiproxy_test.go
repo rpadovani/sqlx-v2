@@ -23,7 +23,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/rpadovani/sqlx-v2"
-	"github.com/rpadovani/sqlx-v2/internal/testutil"
+	"github.com/rpadovani/sqlx-v2/tests/internal/testutil"
 )
 
 func TestFailure_SocketReset_SelectIter(t *testing.T) {

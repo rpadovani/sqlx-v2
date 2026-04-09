@@ -36,6 +36,20 @@ jobs:
           check-latest: true
           cache: true
 
+      - name: Run Tests
+        run: |
+          cur_go=$(go env GOVERSION | sed 's/^go//' | cut -d. -f1,2)
+          for mod in $(find . -name go.mod -type f); do
+            dir=$(dirname "$mod")
+            mod_go=$(grep -m1 -oE '^go [0-9]+\.[0-9]+' "$mod" | cut -d' ' -f2 || echo "1.0")
+            if awk -v c="$cur_go" -v m="$mod_go" 'BEGIN{ if (c < m) exit 1 }'; then
+              echo "Testing module in $dir"
+              (cd "$dir" && go test -v ./...)
+            else
+              echo "Skipping module in $dir (requires Go $mod_go, running Go $cur_go)"
+            fi
+          done
+
       - name: Run Tests (Scripts)
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -51,11 +65,17 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.24'
+          go-version: '1.25'
           cache: true
 
       - name: Run Shadow Tests
-        run: go test -v ./internal/shadow/...
+        run: |
+          for mod in $(find . -name go.mod -type f); do
+            dir=$(dirname "$mod")
+            if [ -d "$dir/internal/shadow" ]; then
+              (cd "$dir" && go test -v ./internal/shadow/...)
+            fi
+          done
 
   fuzz-check:
     name: Fuzzing Verification
